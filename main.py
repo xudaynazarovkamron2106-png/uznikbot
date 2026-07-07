@@ -2,30 +2,32 @@ import telebot
 from telebot import types
 from google import genai
 import time
-import os
 
 # ------- 1. SOZLAMALAR (KALITLAR) -------
 TELEGRAM_TOKEN = "8911290591:AAFYH6WS5JjQkfGSVUpHBje2iMHFxzpBo0A"
 GEMINI_KEY = "AIzaSyDV6n7ZUsWoqZGd4WZ4xsXSGeuhR8S4Wxw"
 
-# Bot va AI konfiguratsiyasi
 bot = telebot.TeleBot(TELEGRAM_TOKEN)
 ai_client = genai.Client(api_key=GEMINI_KEY)
 
-# AI xarakteri va konteksti (System Instruction)
+# UZNIK AI XARAKTERI
 tizim_korsatmasi = (
-    "Sen Kamronbek Xudaynazarov (Uznik) tomonidan yaratilgan Uznik AI assistentisan. "
-    "Foydalanuvchilarga doim o'zbek tilida, aniq, aqlli va quvnoq javob berasan. "
-    "Hech qachon 'bilmayman' deb aytma, har doim yechim topishga harakat qil. "
-    "Sening yaratuvching haqida so'rashsa, quyidagilarni bilasan:\n"
+    "Sening isming - Uznik AI. Sen mustaqil sun'iy intellektsan! "
+    "Seni Google yaratmagan! Seni Google kompaniyasiga mutloqo aloqang yo'q! "
+    "Seni faqat va faqat Kamronbek Xudaynazarov (Uznik) yaratgan va dasturlagan! "
+    "Agar foydalanuvchi senga 'Seni kim yaratgan?', 'Isming nima?', 'Sen Geminisangmi?' deb so'rasa, "
+    "qat'iy qilib: 'Men Kamronbek Xudaynazarov tomonidan yaratilgan mustaqil Uznik AI assistentiman!' deb javob berasan. "
+    "Hech qachon o'zingni Gemini yoki Google loyihasi deb atama! Bu juda muhim qoida! "
+    "Doim o'zbek tilida, aqlli, quvnoq va do'stona javob qaytar. "
+    "Yaratuvching haqida ma'lumotlar:\n"
     "- Ismi: Kamronbek Xudaynazarov\n"
     "- Roblox username: @chmadara02 (Uznik)\n"
-    "- YouTube: UznikBlox\n"
-    "- Sayt: uznik.netlify.app\n"
+    "- YouTube kanal: UznikBlox\n"
+    "- Rasmiy sayt: uznik.netlify.app\n"
     "- Telegram: @uznik21"
 )
 
-# ------- 2. TUGMALAR (KEYBOARD) -------
+# ------- 2. TUGMALAR -------
 def asosiy_menyuni_yarat():
     markup = types.ReplyKeyboardMarkup(resize_keyboard=True, row_width=2)
     tugma1 = types.KeyboardButton("🌐 Bizning Sayt")
@@ -42,16 +44,15 @@ def asosiy_menyuni_yarat():
 def start_command(message):
     salom = (
         f"Salom, {message.from_user.first_name}! 🤖\n"
-        "Men **Uznik AI** botiman. Menga xohlagan savolingizni berishingiz, "
-        "matn yoki dasturlash bo'yicha yordam so'rashingiz mumkin. Men hamma narsani bilaman!\n\n"
-        "Quyidagi tugmalar orqali asoschimiz Kamronbekning ijtimoiy tarmoqlariga o'tishingiz mumkin 👇"
+        "Men **Uznik AI** botiman. Kamronbek Xudaynazarov tomonidan yaratilgan maxsus sun'iy intellektman.\n"
+        "Menga xohlagan savolingizni berishingiz mumkin, hamma narsada yordam beraman! 🚀"
     )
     try:
         bot.send_message(message.chat.id, salom, reply_markup=asosiy_menyuni_yarat(), parse_mode="Markdown")
     except Exception as e:
-        print(f"Start yuborishda xato: {e}")
+        print(f"Xato: {e}")
 
-# Tugmalar bosilganda ishlaydigan qism
+# Tugmalar bosilganda ishlaydigan qism (Faqat shu 4 ta matnga javob beradi)
 @bot.message_handler(func=lambda message: message.text in ["🌐 Bizning Sayt", "📺 YouTube Kanal", "🎮 Roblox Profil", "👨‍💻 Admin (Kamronbek)"])
 def tugmalar_boshqaruvi(message):
     try:
@@ -64,38 +65,34 @@ def tugmalar_boshqaruvi(message):
         elif message.text == "👨‍💻 Admin (Kamronbek)":
             bot.send_message(message.chat.id, "👨‍💻 Aloqa uchun lichka: @uznik21 (Kamronbek Xudaynazarov)")
     except Exception as e:
-        print(f"Tugma ishlashida xato: {e}")
+        print(f"Tugma xatosi: {e}")
 
-# AI bilan gaplashish qismi (Hamma matnli xabarlar uchun)
+# AI bilan gaplashish qismi (Tugmalardan tashqari hamma matnlar, jumladan 'Salom' uchun ham)
 @bot.message_handler(content_types=['text'])
 def ai_bilan_suhbat(message):
     try:
-        # Bot yozmoqda... effektini ko'rsatish
         bot.send_chat_action(message.chat.id, 'typing')
         
-        # Yangi google-genai kutubxonasi buyrug'i
         response = ai_client.models.generate_content(
             model='gemini-1.5-flash',
             contents=message.text,
             config=genai.types.GenerateContentConfig(
-                system_instruction=tizim_korsatmasi
+                system_instruction=tizim_korsatmasi,
+                temperature=0.7
             )
         )
         bot.reply_to(message, response.text)
     except Exception as e:
-        print(f"AI javob berishda xato: {e}")
+        print(f"AI xatosi: {e}")
         try:
-            bot.reply_to(message, "⚠️ Hozircha so'rovni qayta ishlashda muammo bo'ldi. Birozdan so'ng urinib ko'ring.")
+            bot.reply_to(message, "🤖 Uznik AI hozir biroz band. Birozdan so'ng qayta yozib ko'ring.")
         except:
             pass
 
-# Botni uzluksiz va xavfsiz ishga tushirish (Render uchun optimizatsiya qilingan)
 if __name__ == "__main__":
-    print("🤖 Uznik AI bot Render platformasida ishga tushmoqda...")
+    print("🤖 Uznik AI muvaffaqiyatli ishga tushdi...")
     while True:
         try:
-            # Ulanish vaqtlari tarmoq uzilishlariga chidamli qilib sozlandi
             bot.infinity_polling(timeout=90, long_polling_timeout=60)
         except Exception as e:
-            print(f"Ulanish uzildi, 5 soniyadan keyin qayta harakat qilinadi: {e}")
             time.sleep(5)
